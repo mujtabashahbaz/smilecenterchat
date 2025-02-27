@@ -33,11 +33,11 @@ Our team includes Dr. Saeed Mustafa (MDS Orthodontics), Dr. Syeda Mahinu (Genera
 
 // Branch contact details
 const branchContacts = {
-    "f8": { name: "F-8 Headquarter", contact: "0321-5212690" },
-    "executive": { name: "Executive Branch", contact: "0336-6775555" },
-    "i8": { name: "I-8 Branch", contact: "0335-5511119" },
-    "g8": { name: "G-8 Branch", contact: "0370-0344719" },
-    "rims": { name: "RIMS Branch", contact: "0333-7500036" }
+    "f8": "0321-5212690",
+    "executive": "0336-6775555",
+    "i8": "0335-5511119",
+    "g8": "0370-0344719",
+    "rims": "0333-7500036"
 };
 
 // Root route for basic testing
@@ -53,31 +53,33 @@ app.post('/chat', async (req, res) => {
     }
 
     try {
-        const lowerCaseMessage = userMessage.toLowerCase();
-
         // Check if the user is asking about booking an appointment
+        const lowerCaseMessage = userMessage.toLowerCase();
+        let calendlyLink = null;
+
         if (lowerCaseMessage.includes("book") || lowerCaseMessage.includes("appointment")) {
             // Determine the branch based on user input
-            let branchDetails = null;
-
-            for (const [key, value] of Object.entries(branchContacts)) {
-                if (lowerCaseMessage.includes(key)) {
-                    branchDetails = value;
-                    break;
-                }
-            }
-
-            if (branchDetails) {
-                const whatsappLink = `https://wa.me/${branchDetails.contact}`;
-                return res.json({
-                    reply: `To book an appointment at ${branchDetails.name}, please visit this WhatsApp link: ${whatsappLink}. You can also contact them directly at ${branchDetails.contact}.`
-                });
+            if (lowerCaseMessage.includes("f8") || lowerCaseMessage.includes("headquarter")) {
+                calendlyLink = `https://calendly.com/mujtaba-shahbaz/patient-appointment?branch=F8`;
+            } else if (lowerCaseMessage.includes("executive")) {
+                calendlyLink = `https://calendly.com/mujtaba-shahbaz/patient-appointment?branch=Executive`;
+            } else if (lowerCaseMessage.includes("i8")) {
+                calendlyLink = `https://calendly.com/mujtaba-shahbaz/patient-appointment?branch=I8`;
+            } else if (lowerCaseMessage.includes("g8")) {
+                calendlyLink = `https://calendly.com/mujtaba-shahbaz/patient-appointment?branch=G8`;
+            } else if (lowerCaseMessage.includes("rims")) {
+                calendlyLink = `https://calendly.com/mujtaba-shahbaz/patient-appointment?branch=RIMS`;
             } else {
                 // If no branch is specified, prompt the user to specify one
-                return res.json({
-                    reply: "Please specify the branch you'd like to book an appointment at (e.g., F8, Executive, I8, G8, RIMS)."
-                });
+                return res.json({ reply: "Please specify the branch you'd like to book an appointment at (e.g., F8, Executive, I8, G8, RIMS)." });
             }
+        }
+
+        // If a Calendly link is generated, respond with it
+        if (calendlyLink) {
+            return res.json({
+                reply: `To schedule an appointment, click here: <a href="${calendlyLink}" onclick="Calendly.initPopupWidget({url: '${calendlyLink}'});return false;">Schedule an appointment</a>.`
+            });
         }
 
         // Otherwise, use OpenAI to handle the query

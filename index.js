@@ -70,7 +70,8 @@ app.post('/chat', async (req, res) => {
             } else if (lowerCaseMessage.includes("rims")) {
                 whatsappLink = `https://wa.me/${branchContacts.rims}`;
             } else {
-                whatsappLink = "Please specify the branch you'd like to book an appointment at.";
+                // If no branch is specified, prompt the user to specify one
+                return res.json({ reply: "Please specify the branch you'd like to book an appointment at (e.g., F8, Executive, I8, G8, RIMS)." });
             }
         }
 

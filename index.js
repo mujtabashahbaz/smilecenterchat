@@ -33,11 +33,11 @@ Our team includes Dr. Saeed Mustafa (MDS Orthodontics), Dr. Syeda Mahinu (Genera
 
 // Branch contact details
 const branchContacts = {
-    "f8": "0321-5212690",
-    "executive": "0336-6775555",
-    "i8": "0335-5511119",
-    "g8": "0370-0344719",
-    "rims": "0333-7500036"
+    "f8": { phone: "0321-5212690", calendly: "https://calendly.com/mujtaba-shahbaz/patient-appointment?back=1&month=2025-02" },
+    "executive": { phone: "0336-6775555", calendly: "https://calendly.com/mujtaba-shahbaz/patient-appointment?back=1&month=2025-02" },
+    "i8": { phone: "0335-5511119", calendly: "https://calendly.com/mujtaba-shahbaz/patient-appointment?back=1&month=2025-02" },
+    "g8": { phone: "0370-0344719", calendly: "https://calendly.com/mujtaba-shahbaz/patient-appointment?back=1&month=2025-02" },
+    "rims": { phone: "0333-7500036", calendly: "https://calendly.com/mujtaba-shahbaz/patient-appointment?back=1&month=2025-02" }
 };
 
 // Root route for basic testing
@@ -55,31 +55,29 @@ app.post('/chat', async (req, res) => {
     try {
         // Check if the user is asking about booking an appointment
         const lowerCaseMessage = userMessage.toLowerCase();
-        let calendlyLink = null;
+        let responseText = null;
 
         if (lowerCaseMessage.includes("book") || lowerCaseMessage.includes("appointment")) {
             // Determine the branch based on user input
             if (lowerCaseMessage.includes("f8") || lowerCaseMessage.includes("headquarter")) {
-                calendlyLink = `https://calendly.com/mujtaba-shahbaz/patient-appointment?branch=F8`;
+                responseText = `You can book an appointment at the F-8 Headquarter via WhatsApp: https://wa.me/${branchContacts.f8.phone} or schedule it directly on Calendly: ${branchContacts.f8.calendly}.`;
             } else if (lowerCaseMessage.includes("executive")) {
-                calendlyLink = `https://calendly.com/mujtaba-shahbaz/patient-appointment?branch=Executive`;
+                responseText = `You can book an appointment at the Executive Branch via WhatsApp: https://wa.me/${branchContacts.executive.phone} or schedule it directly on Calendly: ${branchContacts.executive.calendly}.`;
             } else if (lowerCaseMessage.includes("i8")) {
-                calendlyLink = `https://calendly.com/mujtaba-shahbaz/patient-appointment?branch=I8`;
+                responseText = `You can book an appointment at the I-8 Branch via WhatsApp: https://wa.me/${branchContacts.i8.phone} or schedule it directly on Calendly: ${branchContacts.i8.calendly}.`;
             } else if (lowerCaseMessage.includes("g8")) {
-                calendlyLink = `https://calendly.com/mujtaba-shahbaz/patient-appointment?branch=G8`;
+                responseText = `You can book an appointment at the G-8 Branch via WhatsApp: https://wa.me/${branchContacts.g8.phone} or schedule it directly on Calendly: ${branchContacts.g8.calendly}.`;
             } else if (lowerCaseMessage.includes("rims")) {
-                calendlyLink = `https://calendly.com/mujtaba-shahbaz/patient-appointment?branch=RIMS`;
+                responseText = `You can book an appointment at the RIMS Branch via WhatsApp: https://wa.me/${branchContacts.rims.phone} or schedule it directly on Calendly: ${branchContacts.rims.calendly}.`;
             } else {
                 // If no branch is specified, prompt the user to specify one
-                return res.json({ reply: "Please specify the branch you'd like to book an appointment at (e.g., F8, Executive, I8, G8, RIMS)." });
+                responseText = "Please specify the branch you'd like to book an appointment at (e.g., F8, Executive, I8, G8, RIMS).";
             }
         }
 
-        // If a Calendly link is generated, respond with it
-        if (calendlyLink) {
-            return res.json({
-                reply: `To schedule an appointment, click here: <a href="${calendlyLink}" onclick="Calendly.initPopupWidget({url: '${calendlyLink}'});return false;">Schedule an appointment</a>.`
-            });
+        // If a response is generated for booking, send it
+        if (responseText) {
+            return res.json({ reply: responseText });
         }
 
         // Otherwise, use OpenAI to handle the query

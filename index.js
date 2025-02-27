@@ -18,19 +18,6 @@ app.use(express.json());
 // Initialize OpenAI API with secret key from environment variables
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Knowledge base for Smile Center Dental Clinic
-const knowledgeBase = `
-Smile Center Dental Clinic has been serving Islamabad for over 10 years, offering comprehensive dental care.
-Our services include preventive care, general and cosmetic dentistry, veneers, bonding, bridges, crowns, teeth whitening, extractions, dentures, dental implants, root canals, and oral health exams.
-Our branches are:
-- **F-8 Headquarter**: G Floor, Al-Babar Center, F-8, Markaz Islamabad (Contact: 0321-5212690)
-- **Executive Branch**: 33 Bhitai Road, F-7/1, Islamabad (Contact: 0336-6775555)
-- **I-8 Branch**: Ist Floor, City Arcade, I-8 Markaz, Islamabad (Contact: 0335-5511119)
-- **G-8 Branch**: Basement Plaza 20D, G-8 Markaz, Islamabad (Contact: 0370-0344719)
-- **RIMS Branch**: 68-E, Jinnah Avenue, Blue Area, Islamabad (Contact: 0333-7500036)
-Our team includes Dr. Saeed Mustafa (MDS Orthodontics), Dr. Syeda Mahinu (General Dentistry), Dr. Usman Khattak (FCPS Periodontology), Dr. Alizay, Dr. Baryal Khan, Dr. Sarah Ali, Dr. Salwan Ghani, Dr. Anum Moiz, Dr. Hashim Asad, Dr. Maham Arshad, and Dr. Zainab Khawaja.
-`;
-
 // Branch contact details
 const branchContacts = {
     "f8": { name: "F-8 Headquarter", contact: "0321-5212690" },
@@ -45,7 +32,7 @@ app.get('/', (req, res) => {
     res.send('Chatbot is running. Send a POST request to /chat.');
 });
 
-// Chat endpoint using OpenAI API
+// Chat endpoint using OpenAI API with Few-Shot Prompting
 app.post('/chat', async (req, res) => {
     const userMessage = req.body.message;
     if (!userMessage) {
@@ -73,18 +60,40 @@ app.post('/chat', async (req, res) => {
                     reply: `To book an appointment at ${branchDetails.name}, please visit this WhatsApp link: ${whatsappLink}. You can also contact them directly at ${branchDetails.contact}.`
                 });
             } else {
-                // If no branch is specified, prompt the user to specify one
-                return res.json({
-                    reply: "Please specify the branch you'd like to book an appointment at (e.g., F8, Executive, I8, G8, RIMS)."
+                // Use Few-Shot Prompting to guide the response
+                const fewShotPrompt = `
+Examples:
+User Input: "Can I book an appointment at F8?"
+Bot Response: "To book an appointment at F-8 Headquarter, please visit this WhatsApp link: https://wa.me/0321-5212690. You can also contact them directly at 0321-5212690."
+
+User Input: "Can I book an appointment?"
+Bot Response: "Please specify the branch you'd like to book an appointment at (e.g., F8, Executive, I8, G8, RIMS)."
+
+User Input: "F8"
+Bot Response: "To book an appointment at F-8 Headquarter, please visit this WhatsApp link: https://wa.me/0321-5212690. You can also contact them directly at 0321-5212690."
+
+Now, respond to the following user input:
+User Input: "${userMessage}"
+Bot Response:
+`;
+
+                const response = await openai.chat.completions.create({
+                    model: "gpt-3.5-turbo",
+                    messages: [
+                        { role: "system", content: "You are a helpful chatbot for Smile Center Dental Clinic." },
+                        { role: "user", content: fewShotPrompt }
+                    ]
                 });
+
+                return res.json({ reply: response.choices[0].message.content.trim() });
             }
         }
 
-        // Otherwise, use OpenAI to handle the query
+        // Otherwise, use OpenAI to handle general inquiries
         const response = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: [
-                { role: "system", content: `You are a helpful chatbot for Smile Center Dental Clinic. Use the following knowledge base: ${knowledgeBase}. If the user's query cannot be answered using this, use your default knowledge.` },
+                { role: "system", content: "You are a helpful chatbot for Smile Center Dental Clinic." },
                 { role: "user", content: userMessage }
             ]
         });
